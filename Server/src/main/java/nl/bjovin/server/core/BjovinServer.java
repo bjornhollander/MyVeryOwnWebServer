@@ -11,49 +11,60 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BjovinServer {
-		
+
 	private static Logger logger = Logger.getLogger(BjovinServer.class.getName());
 	private static final int PORT = 1234;
-	
+
+	private static ServerSocket server;
+	private static Socket socket;
+
+	private static boolean errorOccured = false;
+
 	public static void main(String[] args) {
-		try {
-			Socket socket = launchServer();
-			
-			BufferedReader inputReader = getInputReader(socket);
-			logger.info("Client wrote: " + inputReader.readLine());
-			
-			PrintWriter writer = getWriter(socket);
-			writer.println("Hello from server!");
-			logger.info("Sending response...");
-			writer.flush();
-			
-		} catch (IOException e) {
-			String message = "Unable to open server socket at port " + PORT;
-			logger.log(Level.SEVERE, message, e);
+
+		launchServer();
+		if(!errorOccured) {
+			try {
+			socket = server.accept();
+			} catch (IOException e) {
+				errorOccured = true;
+				String message = "Unable to accept connection at socket.";
+				logger.log(Level.SEVERE, message, e);
+			}
+
+			logger.info("Client connected.");
+
+			try (BufferedReader inputReader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+				logger.info("Client wrote: " + inputReader.readLine());
+			}catch (IOException e) {
+				errorOccured = true;
+				String message = "Unable to accuire input listener.";
+				logger.log(Level.SEVERE, message, e);
+			}
+
+			try (PrintWriter writer = new PrintWriter(socket.getOutputStream())) {
+				writer.println("Hello from server!");
+				logger.info("Sending response...");
+				writer.flush();
+			} catch (IOException e) {
+				errorOccured = true;
+				String message = "Unable to accuire output writer.";
+				logger.log(Level.SEVERE, message, e);
+			}
+
 		}
-		
+
 		logger.info("Shutting down server.");
 	}
 
-	private static PrintWriter getWriter(Socket socket) throws IOException {
-		return new PrintWriter(socket.getOutputStream());
+	private static void launchServer() {
+		try {
+			server = new ServerSocket(PORT);
+			logger.info("Server launched. Listening at port " + PORT + ".");
+		} catch (IOException e) {
+			errorOccured = true;
+			String message = "Unable to open server socket at port " + PORT;
+			logger.log(Level.SEVERE, message, e);
+		}
 	}
-
-	private static BufferedReader getInputReader(Socket socket) throws IOException {
-		InputStream socketInputStream = socket.getInputStream();
-		InputStreamReader reader = new InputStreamReader(socketInputStream);
-		return new BufferedReader(reader);
-	}
-
-	private static Socket launchServer() throws IOException {
-		ServerSocket server = new ServerSocket(PORT);
-		logger.info("Server launched. Listening at port " + PORT + ".");
-		
-		Socket socket = server.accept();
-		
-		logger.info("Client connected.");
-		
-		return socket;
-	}
-	
 }
