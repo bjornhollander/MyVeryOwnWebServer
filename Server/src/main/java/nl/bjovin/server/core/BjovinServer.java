@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 public class BjovinServer {
 
-	private static Logger logger = Logger.getLogger(BjovinServer.class.getName());
+	private static final Logger logger = Logger.getLogger(BjovinServer.class.getName());
 	private static final int PORT = 1234;
 
 	private static ServerSocket server;
@@ -25,30 +25,17 @@ public class BjovinServer {
 		launchServer();
 		if(!errorOccured) {
 			try {
-			socket = server.accept();
+				while(true) {
+					socket = server.accept();
+					logger.info("Client connected.");
+					new ClientThread(socket).start();
+					logger.info("New server instance started.");
+
+				}
+
 			} catch (IOException e) {
 				errorOccured = true;
 				String message = "Unable to accept connection at socket.";
-				logger.log(Level.SEVERE, message, e);
-			}
-
-			logger.info("Client connected.");
-
-			try (BufferedReader inputReader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-				logger.info("Client wrote: " + inputReader.readLine());
-			}catch (IOException e) {
-				errorOccured = true;
-				String message = "Unable to accuire input listener.";
-				logger.log(Level.SEVERE, message, e);
-			}
-
-			try (PrintWriter writer = new PrintWriter(socket.getOutputStream())) {
-				writer.println("Hello from server!");
-				logger.info("Sending response...");
-				writer.flush();
-			} catch (IOException e) {
-				errorOccured = true;
-				String message = "Unable to accuire output writer.";
 				logger.log(Level.SEVERE, message, e);
 			}
 
