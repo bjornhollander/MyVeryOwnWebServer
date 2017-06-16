@@ -16,7 +16,6 @@ public class BjovinServer {
 	private static final int PORT = 1234;
 
 	private static ServerSocket server;
-	private static Socket socket;
 
 	private static boolean errorOccured = false;
 
@@ -26,13 +25,10 @@ public class BjovinServer {
 		if(!errorOccured) {
 			try {
 				while(true) {
-					socket = server.accept();
+					Socket socket = server.accept();
 					logger.info("Client connected.");
 					new ClientThread(socket).start();
-					logger.info("New server instance started.");
-
 				}
-
 			} catch (IOException e) {
 				errorOccured = true;
 				String message = "Unable to accept connection at socket.";

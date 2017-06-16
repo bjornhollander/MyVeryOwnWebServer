@@ -16,22 +16,31 @@ public class BjovinClient {
 
 	private static final Logger logger = Logger.getLogger(BjovinClient.class.getName());
 	private static final int PORT = 1234;
-	
+
 	public static void main(String[] args) {
 		try {
 			Socket client = new Socket("localhost", PORT);
 			logger.info("Succesfully connected to server at port" + PORT + ".");
+
+			while(true) {
+				BufferedReader cmdReader = new BufferedReader(new InputStreamReader(System.in));
+				System.out.print("Command> ");
+				String command = cmdReader.readLine();
+
+				PrintWriter outputWriter = getOutputWriter(client);
+				outputWriter.println(command);
+				outputWriter.flush();
+
+				if("exit".equalsIgnoreCase(command)) {
+					break;
+				}
+
+				BufferedReader inputReader = getInputReader(client);
+				logger.info("Server wrote: " + inputReader.readLine());
+			}
 			
-			PrintWriter outputWriter = getPrintWriter(client);
-			outputWriter.println("Hello from client!");
-			logger.info("Sending message...");
-			outputWriter.flush();
-			logger.info("Message send!");
-			
-			BufferedReader inputReader = getInputReader(client);
-			logger.info("Server wrote: " + inputReader.readLine());
-			
-			
+			client.close();
+
 		} catch (IOException e) {
 			String message = "Unable to connect to server at port " + PORT + ".";
 			logger.log(Level.SEVERE, message, e);
@@ -43,9 +52,9 @@ public class BjovinClient {
 		return new BufferedReader(new InputStreamReader(inputStream));
 	}
 
-	private static PrintWriter getPrintWriter(Socket client) throws IOException {
+	private static PrintWriter getOutputWriter(Socket client) throws IOException {
 		OutputStream outputStream = client.getOutputStream();
 		return new PrintWriter(outputStream);
 	}
-	
+
 }

@@ -12,6 +12,7 @@ class ClientThread extends Thread {
 
 	private static final Logger logger = Logger.getLogger(ClientThread.class.getName());
 	private Socket socket;
+	private boolean terminate = false;
 
 	public ClientThread(Socket socket) {
 		this.socket = socket;
@@ -19,21 +20,31 @@ class ClientThread extends Thread {
 	
 	@Override
 	public void run() {
-		try (BufferedReader inputReader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-			logger.info("Client wrote: " + inputReader.readLine());
-		}catch (IOException e) {
-			String message = "Unable to accuire input listener.";
-			logger.log(Level.SEVERE, message, e);
-		}
-
-		try (PrintWriter writer = new PrintWriter(socket.getOutputStream())) {
-			writer.println("Hello from server!");
-			logger.info("Sending response...");
-			writer.flush();
+		try {
+			BufferedReader inputReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			PrintWriter outputWriter = new PrintWriter(socket.getOutputStream());
+			
+			while(!terminate ) {
+				processMessage(inputReader, outputWriter);
+			}
+			
+			socket.close();
 		} catch (IOException e) {
-			String message = "Unable to accuire output writer.";
+			String message = "Communication disrupted.";
 			logger.log(Level.SEVERE, message, e);
 		}
+	}
+
+	private void processMessage(BufferedReader inputReader, PrintWriter outputWriter) throws IOException {
+		String message = inputReader.readLine();
+		
+		if("exit".equalsIgnoreCase(message)) {
+			terminate = true;
+		}
+		
+		outputWriter.println("Echo: " + message);
+		outputWriter.flush();
+		
 	}
 
 }
