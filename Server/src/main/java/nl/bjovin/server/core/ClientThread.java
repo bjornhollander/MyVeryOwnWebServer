@@ -20,6 +20,7 @@ class ClientThread extends Thread {
 	
 	@Override
 	public void run() {
+		logger.info("Client " + Thread.currentThread().getId() + " connected.");
 		try {
 			BufferedReader inputReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintWriter outputWriter = new PrintWriter(socket.getOutputStream());
@@ -29,6 +30,7 @@ class ClientThread extends Thread {
 			}
 			
 			socket.close();
+			logger.info("Client " + Thread.currentThread().getId() + " closed connection.");
 		} catch (IOException e) {
 			String message = "Communication disrupted.";
 			logger.log(Level.SEVERE, message, e);
@@ -41,6 +43,8 @@ class ClientThread extends Thread {
 		if("exit".equalsIgnoreCase(message)) {
 			terminate = true;
 		}
+		
+		logger.info("Client " + Thread.currentThread().getId() + ": " + message);
 		
 		outputWriter.println("Echo: " + message);
 		outputWriter.flush();

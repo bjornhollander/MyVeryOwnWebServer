@@ -26,7 +26,6 @@ public class BjovinServer {
 			try {
 				while(true) {
 					Socket socket = server.accept();
-					logger.info("Client connected.");
 					new ClientThread(socket).start();
 				}
 			} catch (IOException e) {

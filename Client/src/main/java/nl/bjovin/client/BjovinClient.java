@@ -24,7 +24,7 @@ public class BjovinClient {
 
 			while(true) {
 				BufferedReader cmdReader = new BufferedReader(new InputStreamReader(System.in));
-				System.out.print("Command> ");
+				logger.info("Enter command: ");
 				String command = cmdReader.readLine();
 
 				PrintWriter outputWriter = getOutputWriter(client);
