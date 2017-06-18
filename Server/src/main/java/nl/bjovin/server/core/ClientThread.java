@@ -11,44 +11,54 @@ import java.util.logging.Logger;
 class ClientThread extends Thread {
 
 	private static final Logger logger = Logger.getLogger(ClientThread.class.getName());
+	private static int cookieNumber = 1;
+	
 	private Socket socket;
-	private boolean terminate = false;
 
 	public ClientThread(Socket socket) {
 		this.socket = socket;
 	}
-	
+
 	@Override
 	public void run() {
 		logger.info("Client " + Thread.currentThread().getId() + " connected.");
-		try {
-			BufferedReader inputReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			PrintWriter outputWriter = new PrintWriter(socket.getOutputStream());
+		try(BufferedReader inputReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				PrintWriter outputWriter = new PrintWriter(socket.getOutputStream());) {
+
+			boolean hasCookie = false;
 			
-			while(!terminate ) {
-				processMessage(inputReader, outputWriter);
+			while(true) {
+				String line = inputReader.readLine();
+				if(line.startsWith("Cookie: ")) {
+					hasCookie = true;
+					logger.info("** Cookie line! **");
+				}
+				logger.info(line);
+				
+				
+				if ("".equals(line))
+					break;
 			}
-			
-			socket.close();
-			logger.info("Client " + Thread.currentThread().getId() + " closed connection.");
+
+			outputWriter.println("HTTP/1.0 200 OK");
+			outputWriter.println("Content-Type: text/html");
+			if(!hasCookie) {
+				String cookieName = "MyVeryOwnCookie";
+				String cookieValue = "cookie_" + cookieNumber++;
+				outputWriter.println("Set-Cookie: " + cookieName + ":" + cookieValue);
+			}
+			outputWriter.println();
+			outputWriter.println("<HTML>");
+			outputWriter.println("<HEAD><link rel=\"shortcut icon\" href=\"about:blank\" /></HEAD>");
+			outputWriter.println("<BODY>");
+			outputWriter.println("Hello from <br />My Very Own Web Server");
+			outputWriter.println("</BODY>");
+			outputWriter.println("</HTML>");
+
 		} catch (IOException e) {
 			String message = "Communication disrupted.";
 			logger.log(Level.SEVERE, message, e);
 		}
-	}
-
-	private void processMessage(BufferedReader inputReader, PrintWriter outputWriter) throws IOException {
-		String message = inputReader.readLine();
-		
-		if("exit".equalsIgnoreCase(message)) {
-			terminate = true;
-		}
-		
-		logger.info("Client " + Thread.currentThread().getId() + ": " + message);
-		
-		outputWriter.println("Echo: " + message);
-		outputWriter.flush();
-		
 	}
 
 }

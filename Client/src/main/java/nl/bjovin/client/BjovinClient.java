@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 public class BjovinClient {
 
 	private static final Logger logger = Logger.getLogger(BjovinClient.class.getName());
-	private static final int PORT = 1234;
+	private static final int PORT = 80;
 
 	public static void main(String[] args) {
 		try {
